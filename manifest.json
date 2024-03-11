@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Text content analysis",
+  "version": "1.0",
+  "description": "Text content analysis",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contentScript.js"]
+    }
+  ]
+}
