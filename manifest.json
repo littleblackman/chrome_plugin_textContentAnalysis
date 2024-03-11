@@ -1,11 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Text content analysis",
+  "name": "Advanced Text Content Analysis",
   "version": "1.0",
-  "description": "Text content analysis",
+  "description": "This Chrome extension provides an in-depth analysis of text content on web pages. It features unique word counts, bi-gram and tri-gram analysis, and highlights text structure through headings and links overview. Designed for SEO specialists, content creators, and web developers to optimize web content and improve SEO performance.",
   "permissions": ["activeTab", "scripting"],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "192": "Logo_ETSIK-192x192.png"
+    }
+  },
+  "icons": {
+    "192": "Logo_ETSIK-192x192.png"
   },
   "content_scripts": [
     {

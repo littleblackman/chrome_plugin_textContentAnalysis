@@ -8,12 +8,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const info = results[0].result;
             document.getElementById('pageTitle').textContent = info.pageTitle;
             document.getElementById('pageDescription').textContent = info.metaDescription;
-            const headings = document.getElementById('headings');
+
+            const headingsContainer = document.getElementById('headings');
             info.headings.forEach(heading => {
                 const elem = document.createElement('div');
                 elem.textContent = `${heading.level}: ${heading.text}`;
-                headings.appendChild(elem);
+                headingsContainer.appendChild(elem);
             });
+
             const linksContainer = document.getElementById('links');
             info.links.forEach(link => {
                 const linkElem = document.createElement('div');
@@ -21,16 +23,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 linksContainer.appendChild(linkElem);
             });
 
-            const wordWeightContainer = document.getElementById('resultWordWeight');
-            info.resultWordWeight.slice(0, 50).forEach(([word, count]) => {
-                const wordElem = document.createElement('div');
-                wordElem.textContent = `${word}: ${count}`;
-                wordWeightContainer.appendChild(wordElem);
-            });
+            // Traitement pour afficher les 50 premiers mots, bigrams, trigrams
+            displayResults('resultWordWeight', info.resultWordWeight.sortedWordCount, 'Top Single Words', 30);
+            displayResults('resultWordWeight', info.resultWordWeight.sortedBigramCounts, 'Top Bigrams', 20);
+            displayResults('resultWordWeight', info.resultWordWeight.sortedTrigramCounts, 'Top Trigrams', 20);
         });
     });
 });
 
+function displayResults(containerId, results, titleText, limit = 50) {
+    const container = document.getElementById(containerId);
+    const title = document.createElement('h3');
+    title.textContent = titleText;
+    container.appendChild(title);
+
+    results.slice(0, limit).forEach(([phrase, count]) => {
+        const elem = document.createElement('div');
+        elem.textContent = `${phrase}: ${count}`;
+        container.appendChild(elem);
+    });
+}
 function analysePage() {
     const pageTitle = document.querySelector('title')?.innerText || '';
     const metaDescription = document.querySelector('meta[name="description"]')?.content || '';
@@ -64,21 +76,46 @@ function analysePage() {
     // count words
     function calculWeightWord(texte) {
         texte = texte.toLowerCase();
-        texte = texte.replace(/[^a-z0-9À-ÿ]+/gi, ' ');
-        const words = texte.split(/\s+/);
-        const wordsFiltered = words.filter(mot => mot.length >= 3);
-        const wordCounted = wordsFiltered.reduce((acc, mot) => {
-            acc[mot] = acc[mot] ? acc[mot] + 1 : 1;
+        texte = texte.replace(/[^a-z0-9À-ÿ\s]+/gi, ' ');
+        const words = texte.split(/\s+/).filter(mot => mot.length >= 3);
+
+        // Count unique words
+        const wordCount = words.reduce((acc, mot) => {
+            acc[mot] = (acc[mot] || 0) + 1;
             return acc;
         }, {});
 
-        const wordCountedFiltered = Object.entries(wordCounted).filter(([mot, count]) => count > 1);
+        // Count bigrams
+        const bigrams = words.slice(0, -1).map((current, i) => `${current} ${words[i + 1]}`);
+        const bigramCounts = bigrams.reduce((acc, bigram) => {
+            acc[bigram] = (acc[bigram] || 0) + 1;
+            return acc;
+        }, {});
 
-        // Sorted by count
-        const sortedWordCounted = wordCountedFiltered.sort((a, b) => b[1] - a[1]);
+        // Count trigrams
+        const trigrams = words.slice(0, -2).map((current, i) => `${current} ${words[i + 1]} ${words[i + 2]}`);
+        const trigramCounts = trigrams.reduce((acc, trigram) => {
+            acc[trigram] = (acc[trigram] || 0) + 1;
+            return acc;
+        }, {});
 
-        return sortedWordCounted;
+        // Filter to keep only words that appear more than once
+        const filteredWordCount = Object.entries(wordCount).filter(([word, count]) => count > 1);
+        const filteredBigramCounts = Object.entries(bigramCounts).filter(([bigram, count]) => count > 1);
+        const filteredTrigramCounts = Object.entries(trigramCounts).filter(([trigram, count]) => count > 1);
+
+        // Order by count
+        const sortedWordCount = filteredWordCount.sort((a, b) => b[1] - a[1]);
+        const sortedBigramCounts = filteredBigramCounts.sort((a, b) => b[1] - a[1]);
+        const sortedTrigramCounts = filteredTrigramCounts.sort((a, b) => b[1] - a[1]);
+
+        return {
+            sortedWordCount,
+            sortedBigramCounts,
+            sortedTrigramCounts
+        };
     }
+
 
     // add headings text
     const headingsText = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'))
