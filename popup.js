@@ -77,7 +77,10 @@ function analysePage() {
     function calculWeightWord(texte) {
         texte = texte.toLowerCase();
         texte = texte.replace(/[^a-z0-9À-ÿ\s]+/gi, ' ');
-        const words = texte.split(/\s+/).filter(mot => mot.length >= 3);
+        const allWords = texte.split(/\s+/);
+
+        // Filter word > 3 for unique words
+        const words = allWords.filter(mot => mot.length >= 3);
 
         // Count unique words
         const wordCount = words.reduce((acc, mot) => {
@@ -85,26 +88,25 @@ function analysePage() {
             return acc;
         }, {});
 
-        // Count bigrams
-        const bigrams = words.slice(0, -1).map((current, i) => `${current} ${words[i + 1]}`);
+        // no filter for bigrams and tri grams
+        const bigrams = allWords.slice(0, -1).map((current, i) => `${current} ${allWords[i + 1]}`);
         const bigramCounts = bigrams.reduce((acc, bigram) => {
             acc[bigram] = (acc[bigram] || 0) + 1;
             return acc;
         }, {});
 
-        // Count trigrams
-        const trigrams = words.slice(0, -2).map((current, i) => `${current} ${words[i + 1]} ${words[i + 2]}`);
+        // trigrams
+        const trigrams = allWords.slice(0, -2).map((current, i) => `${current} ${allWords[i + 1]} ${allWords[i + 2]}`);
         const trigramCounts = trigrams.reduce((acc, trigram) => {
             acc[trigram] = (acc[trigram] || 0) + 1;
             return acc;
         }, {});
 
-        // Filter to keep only words that appear more than once
+        // filtered words serial
         const filteredWordCount = Object.entries(wordCount).filter(([word, count]) => count > 1);
         const filteredBigramCounts = Object.entries(bigramCounts).filter(([bigram, count]) => count > 1);
         const filteredTrigramCounts = Object.entries(trigramCounts).filter(([trigram, count]) => count > 1);
 
-        // Order by count
         const sortedWordCount = filteredWordCount.sort((a, b) => b[1] - a[1]);
         const sortedBigramCounts = filteredBigramCounts.sort((a, b) => b[1] - a[1]);
         const sortedTrigramCounts = filteredTrigramCounts.sort((a, b) => b[1] - a[1]);
@@ -115,6 +117,7 @@ function analysePage() {
             sortedTrigramCounts
         };
     }
+
 
 
     // add headings text
